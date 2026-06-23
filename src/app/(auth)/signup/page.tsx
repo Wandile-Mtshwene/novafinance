@@ -4,118 +4,152 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { authClient } from "@/lib/auth/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NovaLogo } from "@/components/nova-logo";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { authClient } from "@/lib/auth/auth-client";
 
 export default function SignupPage() {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  function handleSignup(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    const fd = new FormData(e.currentTarget);
-    const name = fd.get("name") as string;
-    const email = fd.get("email") as string;
-    const password = fd.get("password") as string;
-
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
-      return;
-    }
-
     startTransition(async () => {
-      const { error } = await authClient.signUp.email({ name, email, password });
-      if (error) {
-        setError(error.message ?? "Could not create account. Please try again.");
+      const { error: authError } = await authClient.signUp.email({
+        name,
+        email,
+        password,
+      });
+      if (authError) {
+        setError(authError.message ?? "Something went wrong. Please try again.");
       } else {
         router.push("/dashboard");
-        router.refresh();
       }
     });
   }
 
   return (
-    <div className="rounded-2xl border border-[var(--nova-border)] bg-[var(--nova-card)] p-6">
-      <h1 className="text-lg font-semibold text-[var(--nova-text)] mb-1">Create account</h1>
-      <p className="text-sm text-[var(--nova-muted)] mb-6">Start managing your business finances today.</p>
+    <div className="min-h-screen flex items-center justify-center bg-[var(--nova-surface)] px-6 py-12">
+      {/* Theme toggle */}
+      <div className="fixed top-4 right-4 z-10">
+        <ThemeToggle className="bg-[var(--nova-card)] border border-[var(--nova-border)] shadow-sm" />
+      </div>
 
-      {error && (
-        <div className="mb-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-          {error}
+      <div className="w-full max-w-sm">
+        <div className="flex justify-center mb-8">
+          <Link href="/">
+            <NovaLogo size="md" />
+          </Link>
         </div>
-      )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-1.5">
-          <Label className="text-xs text-[var(--nova-muted)]">Full Name</Label>
-          <Input
-            name="name"
-            placeholder="Jane Smith"
-            required
-            autoComplete="name"
-            className="h-10 rounded-xl border-[var(--nova-border)] bg-[var(--nova-surface)] text-[var(--nova-text)] placeholder:text-[var(--nova-dim)]"
-          />
+        <div className="mb-8 text-center">
+          <h1 className="text-2xl font-bold text-[var(--nova-text)]">Create your account</h1>
+          <p className="mt-1 text-sm text-[var(--nova-muted)]">
+            Get started with NovaFinance for free
+          </p>
         </div>
-        <div className="space-y-1.5">
-          <Label className="text-xs text-[var(--nova-muted)]">Email</Label>
-          <Input
-            name="email"
-            type="email"
-            placeholder="you@company.com"
-            required
-            autoComplete="email"
-            className="h-10 rounded-xl border-[var(--nova-border)] bg-[var(--nova-surface)] text-[var(--nova-text)] placeholder:text-[var(--nova-dim)]"
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label className="text-xs text-[var(--nova-muted)]">Password</Label>
-          <div className="relative">
-            <Input
-              name="password"
-              type={showPassword ? "text" : "password"}
-              placeholder="At least 8 characters"
-              required
-              minLength={8}
-              autoComplete="new-password"
-              className="h-10 rounded-xl border-[var(--nova-border)] bg-[var(--nova-surface)] text-[var(--nova-text)] pr-10"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--nova-dim)] hover:text-[var(--nova-muted)] transition-colors"
-            >
-              {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-            </button>
+
+        {error && (
+          <div className="mb-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+            {error}
           </div>
-        </div>
+        )}
 
-        <Button
-          type="submit"
-          disabled={isPending}
-          className="w-full h-10 bg-[var(--nova-accent)] hover:bg-[var(--nova-accent-hover)] text-white font-medium rounded-xl"
-        >
-          {isPending && <Loader2 size={14} className="animate-spin mr-2" />}
-          Create account
-        </Button>
-      </form>
+        <form onSubmit={handleSignup} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="name" className="text-sm font-medium text-[var(--nova-muted)]">
+              Full Name
+            </Label>
+            <Input
+              id="name"
+              type="text"
+              placeholder="Jane Smith"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              autoComplete="name"
+              className="h-10 rounded-lg border-[var(--nova-border)] bg-[var(--nova-tint-2)] text-[var(--nova-text)] placeholder:text-[var(--nova-dim)] focus:border-[var(--nova-accent)]"
+            />
+          </div>
 
-      <p className="mt-5 text-center text-xs text-[var(--nova-muted)]">
-        Already have an account?{" "}
-        <Link href="/login" className="text-[var(--nova-accent)] hover:underline font-medium">
-          Sign in
-        </Link>
-      </p>
+          <div className="space-y-1.5">
+            <Label htmlFor="email" className="text-sm font-medium text-[var(--nova-muted)]">
+              Email
+            </Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="you@company.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+              className="h-10 rounded-lg border-[var(--nova-border)] bg-[var(--nova-tint-2)] text-[var(--nova-text)] placeholder:text-[var(--nova-dim)] focus:border-[var(--nova-accent)]"
+            />
+          </div>
 
-      <p className="mt-3 text-center text-xs text-[var(--nova-dim)]">
-        By creating an account you agree to our{" "}
-        <span className="text-[var(--nova-muted)]">Terms of Service</span> and{" "}
-        <span className="text-[var(--nova-muted)]">Privacy Policy</span>.
-      </p>
+          <div className="space-y-1.5">
+            <Label htmlFor="password" className="text-sm font-medium text-[var(--nova-muted)]">
+              Password
+            </Label>
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="At least 8 characters"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="new-password"
+                minLength={8}
+                className="h-10 rounded-lg border-[var(--nova-border)] bg-[var(--nova-tint-2)] text-[var(--nova-text)] placeholder:text-[var(--nova-dim)] focus:border-[var(--nova-accent)] pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--nova-muted)] hover:text-[var(--nova-text)] transition-colors"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </div>
+
+          <Button
+            type="submit"
+            disabled={isPending}
+            className="w-full h-10 rounded-lg bg-[var(--nova-accent)] hover:bg-[var(--nova-accent)]/90 text-white font-medium mt-2"
+          >
+            {isPending && <Loader2 size={16} className="animate-spin mr-2" />}
+            {isPending ? "Creating account..." : "Create account"}
+          </Button>
+        </form>
+
+        <p className="mt-5 text-center text-sm text-[var(--nova-muted)]">
+          Already have an account?{" "}
+          <Link
+            href="/login"
+            className="text-[var(--nova-accent)] hover:opacity-80 font-medium transition-opacity"
+          >
+            Sign in
+          </Link>
+        </p>
+
+        <p className="mt-6 text-center text-[11px] text-[var(--nova-dim)]">
+          By creating an account you agree to our{" "}
+          <span className="text-[var(--nova-muted)]">Terms of Service</span> and{" "}
+          <span className="text-[var(--nova-muted)]">Privacy Policy</span>.
+        </p>
+      </div>
     </div>
   );
 }
