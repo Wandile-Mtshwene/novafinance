@@ -134,7 +134,7 @@ export function Sidebar({ user, role }: SidebarProps) {
       className={cn(
         "flex h-full flex-col border-r border-[var(--nova-border)] bg-[var(--nova-deep)]",
         "transition-[width] duration-300 ease-in-out overflow-hidden shrink-0",
-        collapsed ? "w-14" : "w-64"
+        collapsed ? "w-14" : "w-60"
       )}
     >
       {/* Brand */}
